@@ -297,11 +297,15 @@
           };
 
           const downloadImage = (dataUrl, filename) => {
-            const link = document.createElement('a');
-            link.download = `android-${filename}`;
-            link.href = dataUrl;
-            link.click();
-          };
+  const link = document.createElement('a');
+  
+  // This removes the old extension (.png) and replaces it with .jpg
+  const safeFilename = filename.replace(/\.[^/.]+$/, "") + ".jpg";
+  
+  link.download = `android-${safeFilename}`;
+  link.href = dataUrl;
+  link.click();
+};
 
           return (
             <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
