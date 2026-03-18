@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Androidifier Tool</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load React, ReactDOM, and Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // --- Custom SVG Icons to replace external dependencies ---
+        const IconBase = ({ className, children }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            {children}
+          </svg>
+        );
+        const Tablet = ({className}) => <IconBase className={className}><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></IconBase>;
+        const Settings = ({className}) => <IconBase className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconBase>;
+        const Trash2 = ({className}) => <IconBase className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>;
+        const Upload = ({className}) => <IconBase className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>;
+        const Plus = ({className}) => <IconBase className={className}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
+        const Download = ({className}) => <IconBase className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
+        const ImageIcon = ({className}) => <IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></IconBase>;
+
+
+        const App = () => {
+          const [sourceImages, setSourceImages] = useState([]);
+          const [processedImages, setProcessedImages] = useState([]);
+          const [isProcessing, setIsProcessing] = useState(false);
+
+          const [settings, setSettings] = useState({
+            statusBar: true,
+            navBar: 'gesture', 
+            timeText: '10:00'
+          });
+
+          const fileInputRef = useRef(null);
+
+          const getAverageColor = (ctx, x, y, w, h) => {
+            try {
+              if (w <= 0 || h <= 0) return { r: 240, g: 240, b: 240, lum: 1 };
+              
+              const imgData = ctx.getImageData(x, y, w, h).data;
+              let r = 0, g = 0, b = 0, count = 0;
+              
+              for (let i = 0; i < imgData.length; i += 16) {
+                r += imgData[i];
+                g += imgData[i + 1];
+                b += imgData[i + 2];
+                count++;
+              }
+              
+              if (count === 0) return { r: 240, g: 240, b: 240, lum: 1 };
+              
+              r = Math.round(r / count);
+              g = Math.round(g / count);
+              b = Math.round(b / count);
+              
+              const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+              return { r, g, b, lum };
+            } catch (e) {
+              return { r: 240, g: 240, b: 240, lum: 1 };
+            }
+          };
+
+          const drawStatusBarIcons = (ctx, targetWidth, barHeight, uiColor, timeText) => {
+            ctx.fillStyle = uiColor;
+            ctx.font = `500 ${Math.floor(barHeight * 0.45)}px 'Roboto', sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left';
+
+            const padding = targetWidth * 0.03;
+            const iconY = barHeight * 0.55; 
+
+            ctx.fillText(timeText, padding, iconY);
+
+            ctx.textAlign = 'right';
+            const iconSize = barHeight * 0.4;
+            const iconSpacing = iconSize * 0.5;
+            let currentX = targetWidth - padding;
+
+            const batWidth = iconSize * 0.45;
+            const batHeight = iconSize * 0.9;
+            const nubWidth = batWidth * 0.4;
+            const nubHeight = batHeight * 0.15;
+            const bodyHeight = batHeight - nubHeight;
+            const batY = iconY - batHeight / 2;
+            
+            ctx.fillRect(currentX - batWidth, batY + nubHeight, batWidth, bodyHeight);
+            ctx.fillRect(currentX - batWidth / 2 - nubWidth / 2, batY, nubWidth, nubHeight);
+            
+            currentX -= (batWidth + iconSpacing);
+
+            const cellSize = iconSize * 0.9;
+            ctx.beginPath();
+            ctx.moveTo(currentX, iconY + iconSize / 2); 
+            ctx.lineTo(currentX, iconY + iconSize / 2 - cellSize); 
+            ctx.lineTo(currentX - cellSize, iconY + iconSize / 2); 
+            ctx.closePath();
+            ctx.fill();
+
+            currentX -= (cellSize + iconSpacing);
+
+            const wifiRadius = iconSize * 0.95;
+            const wifiWidthHalf = wifiRadius * Math.cos(Math.PI / 4); 
+            const wifiX = currentX - wifiWidthHalf;
+            const wifiY = iconY + iconSize / 2; 
+
+            ctx.beginPath();
+            ctx.moveTo(wifiX, wifiY);
+            ctx.arc(wifiX, wifiY, wifiRadius, Math.PI * 1.25, Math.PI * 1.75);
+            ctx.lineTo(wifiX, wifiY);
+            ctx.fill();
+          };
+
+          const drawNavBarIcons = (ctx, targetWidth, navHeight, navY, uiColor, navType) => {
+            ctx.fillStyle = uiColor;
+            ctx.strokeStyle = uiColor;
+            ctx.lineWidth = Math.max(3, navHeight * 0.05);
+
+            if (navType === 'gesture') {
+              const pillWidth = targetWidth * 0.35;
+              const pillHeight = navHeight * 0.12;
+              const pillX = (targetWidth - pillWidth) / 2;
+              const pillY = navY + (navHeight - pillHeight) / 2 + (navHeight * 0.1);
+
+              ctx.beginPath();
+              if (ctx.roundRect) {
+                ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillHeight/2);
+              } else {
+                ctx.rect(pillX, pillY, pillWidth, pillHeight);
+              }
+              ctx.fill();
+            } else if (navType === 'buttons') {
+              const spacing = targetWidth * 0.25;
+              const centerY = navY + navHeight / 2;
+              const centerX = targetWidth / 2;
+              const iconSize = navHeight * 0.35;
+
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, iconSize/2, 0, Math.PI * 2);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(centerX - spacing + iconSize/2, centerY - iconSize/2);
+              ctx.lineTo(centerX - spacing - iconSize/2, centerY);
+              ctx.lineTo(centerX - spacing + iconSize/2, centerY + iconSize/2);
+              ctx.closePath();
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.rect(centerX + spacing - iconSize/2, centerY - iconSize/2, iconSize, iconSize);
+              ctx.stroke();
+            }
+          };
+
+          const processBatch = useCallback(async () => {
+            if (sourceImages.length === 0) {
+              setProcessedImages([]);
+              return;
+            }
+
+            setIsProcessing(true);
+            const results = [];
+
+            for (const source of sourceImages) {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+
+              const originalWidth = source.width;
+              const originalHeight = source.height;
+
+              const trimTop = 50;
+              const trimBottom = 40;
+              const trimmedHeight = Math.max(1, originalHeight - trimTop - trimBottom);
+
+              const isPortrait = originalHeight > originalWidth;
+              const barHeight = settings.statusBar ? Math.max(originalWidth * (isPortrait ? 0.035 : 0.025), 40) : 0;
+              const navHeight = settings.navBar !== 'none' ? Math.max(originalWidth * (isPortrait ? 0.045 : 0.035), 60) : 0;
+
+              const finalHeight = barHeight + trimmedHeight + navHeight;
+              canvas.width = originalWidth;
+              canvas.height = finalHeight;
+
+              const imgY = barHeight;
+              ctx.drawImage(
+                source.img, 
+                0, trimTop, originalWidth, trimmedHeight, 
+                0, imgY, originalWidth, trimmedHeight     
+              );
+
+              const topColor = getAverageColor(ctx, 0, imgY, originalWidth, Math.min(10, trimmedHeight));
+              const bottomColor = getAverageColor(ctx, 0, imgY + trimmedHeight - Math.min(10, trimmedHeight), originalWidth, Math.min(10, trimmedHeight));
+
+              if (settings.statusBar) {
+                const isLight = topColor.lum > 0.5;
+                ctx.fillStyle = isLight ? '#FFFFFF' : '#000000';
+                ctx.fillRect(0, 0, originalWidth, barHeight);
+
+                const uiColor = isLight ? '#1F1F1F' : '#FFFFFF';
+                drawStatusBarIcons(ctx, originalWidth, barHeight, uiColor, settings.timeText);
+              }
+
+              if (settings.navBar !== 'none') {
+                const navY = finalHeight - navHeight;
+                
+                const isLight = bottomColor.lum > 0.5;
+                ctx.fillStyle = isLight ? '#FFFFFF' : '#000000';
+                ctx.fillRect(0, navY, originalWidth, navHeight);
+
+                const uiColor = isLight ? '#1F1F1F' : '#FFFFFF';
+                drawNavBarIcons(ctx, originalWidth, navHeight, navY, uiColor, settings.navBar);
+              }
+
+              results.push({
+                id: source.id,
+                name: source.name,
+                dataUrl: canvas.toDataURL('image/jpeg', 0.95)
+              });
+            }
+
+            setProcessedImages(results);
+            setIsProcessing(false);
+          }, [sourceImages, settings]);
+
+          useEffect(() => {
+            processBatch();
+          }, [processBatch]);
+
+          const handleFilesAdded = (files) => {
+            const newImages = [];
+            let loadedCount = 0;
+
+            Array.from(files).forEach((file) => {
+              if (!file.type.startsWith('image/')) {
+                loadedCount++;
+                return;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                  newImages.push({
+                    id: Math.random().toString(36).substring(7),
+                    name: file.name,
+                    img: img,
+                    width: img.width,
+                    height: img.height
+                  });
+                  
+                  loadedCount++;
+                  if (loadedCount === files.length) {
+                    setSourceImages(prev => [...prev, ...newImages]);
+                  }
+                };
+                img.src = event.target.result;
+              };
+              reader.readAsDataURL(file);
+            });
+          };
+
+          const handleDrop = (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              handleFilesAdded(e.dataTransfer.files);
+            }
+          };
+
+          const handleDragOver = (e) => {
+            e.preventDefault();
+          };
+
+          const updateSetting = (key, value) => {
+            setSettings(prev => ({ ...prev, [key]: value }));
+          };
+
+          const clearAll = () => {
+            setSourceImages([]);
+            setProcessedImages([]);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+          };
+
+          const downloadImage = (dataUrl, filename) => {
+            const link = document.createElement('a');
+            link.download = `android-${filename}`;
+            link.href = dataUrl;
+            link.click();
+          };
+
+          return (
+            <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
+              <div className="max-w-[1400px] mx-auto">
+                <header className="mb-8">
+                  <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <Tablet className="text-emerald-500 w-8 h-8" />
+                    Androidifier (Batch Processor)
+                  </h1>
+                  <p className="text-slate-500 mt-1">Upload multiple iPad screenshots to seamlessly convert them into Android tablet mockups.</p>
+                </header>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  
+                  <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+                      <div className="flex items-center justify-between border-b pb-3">
+                        <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
+                          <Settings className="w-5 h-5 text-emerald-500" />
+                          Global Settings
+                        </div>
+                        {sourceImages.length > 0 && (
+                          <button onClick={clearAll} className="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
+                            <Trash2 className="w-4 h-4" /> Clear All
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        <p className="text-sm text-slate-500">
+                          These settings apply automatically to all images. iOS artifacts (top 50px, bottom 40px) are automatically trimmed and replaced seamlessly. Width is always preserved.
+                        </p>
+
+                        <div className="space-y-3 pt-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-semibold text-slate-700">Android Status Bar</label>
+                            <input 
+                              type="checkbox" 
+                              checked={settings.statusBar} 
+                              onChange={(e) => updateSetting('statusBar', e.target.checked)}
+                              className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                            />
+                          </div>
+                          {settings.statusBar && (
+                            <div className="flex items-center gap-2 pl-2">
+                              <span className="text-sm text-slate-600">Clock Time:</span>
+                              <input 
+                                type="text" 
+                                value={settings.timeText}
+                                onChange={(e) => updateSetting('timeText', e.target.value)}
+                                className="border border-slate-300 rounded px-2 py-1 text-sm w-24 focus:outline-none focus:border-emerald-500 bg-slate-50"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <hr className="border-slate-100" />
+
+                        <div className="space-y-3">
+                          <label className="text-sm font-semibold text-slate-700">Navigation Bar</label>
+                          <select 
+                            value={settings.navBar}
+                            onChange={(e) => updateSetting('navBar', e.target.value)}
+                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:border-emerald-500"
+                          >
+                            <option value="none">None</option>
+                            <option value="gesture">Gesture Pill (Modern)</option>
+                            <option value="buttons">3-Button (Classic)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-emerald-50 rounded-xl p-5 border border-emerald-100 text-sm text-emerald-800 space-y-2">
+                      <p className="font-semibold">How it works:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>Upload one or multiple images.</li>
+                        <li>The tool keeps the exact original width.</li>
+                        <li>It samples the edge pixels to paint a seamless, auto-matching background behind the new Android UI.</li>
+                        <li>Icon colors dynamically switch to light/dark for maximum contrast.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-8 flex flex-col gap-6">
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      className="hidden" 
+                      ref={fileInputRef}
+                      onChange={(e) => handleFilesAdded(e.target.files)} 
+                    />
+
+                    {sourceImages.length === 0 && (
+                      <div 
+                        className="flex-1 min-h-[500px] border-2 border-dashed border-slate-300 rounded-2xl bg-white flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer"
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <div className="bg-emerald-100 p-4 rounded-full mb-4">
+                          <Upload className="w-10 h-10 text-emerald-600" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">Drag & Drop Screenshots</h3>
+                        <p className="text-slate-500 max-w-sm">
+                          Upload multiple iPad screenshots at once. They will be processed automatically in your browser.
+                        </p>
+                      </div>
+                    )}
+
+                    {sourceImages.length > 0 && (
+                      <>
+                        <div 
+                          className="bg-white border-2 border-dashed border-emerald-300 rounded-xl p-6 text-center hover:bg-emerald-50 transition-colors cursor-pointer"
+                          onDragOver={handleDragOver}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <div className="flex items-center justify-center gap-3 text-emerald-700 font-medium">
+                            <Plus className="w-5 h-5" />
+                            Drop more images here or click to browse
+                          </div>
+                        </div>
+
+                        {isProcessing && (
+                          <div className="text-center py-4 text-emerald-600 font-medium animate-pulse">
+                            Processing images...
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+                          {processedImages.map((img) => (
+                            <div key={img.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                              <div className="bg-slate-100 p-4 flex-1 flex items-center justify-center border-b border-slate-100 overflow-hidden relative group">
+                                <img 
+                                  src={img.dataUrl} 
+                                  alt={img.name} 
+                                  className="max-h-[500px] w-auto object-contain drop-shadow-md rounded-sm"
+                                />
+                              </div>
+                              
+                              <div className="p-4 flex items-center justify-between bg-white">
+                                <div className="truncate text-sm font-medium text-slate-600 max-w-[150px]" title={img.name}>
+                                  {img.name}
+                                </div>
+                                <button
+                                  onClick={() => downloadImage(img.dataUrl, img.name)}
+                                  className="bg-slate-900 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                                >
+                                  <Download className="w-4 h-4" />
+                                  Download
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
