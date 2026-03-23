@@ -12,6 +12,9 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Load JSZip for bundling multiple downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
         body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -30,21 +33,24 @@
           </svg>
         );
         const Tablet = ({className}) => <IconBase className={className}><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></IconBase>;
-        const Settings = ({className}) => <IconBase className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconBase>;
+        const Smartphone = ({className}) => <IconBase className={className}><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></IconBase>;
+        const Settings = ({className}) => <IconBase className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1-1-1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconBase>;
         const Trash2 = ({className}) => <IconBase className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconBase>;
         const Upload = ({className}) => <IconBase className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>;
         const Plus = ({className}) => <IconBase className={className}><path d="M5 12h14"/><path d="M12 5v14"/></IconBase>;
         const Download = ({className}) => <IconBase className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
-        const ImageIcon = ({className}) => <IconBase className={className}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></IconBase>;
-
+        const Archive = ({className}) => <IconBase className={className}><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></IconBase>;
 
         const App = () => {
           const [sourceImages, setSourceImages] = useState([]);
           const [processedImages, setProcessedImages] = useState([]);
           const [isProcessing, setIsProcessing] = useState(false);
+          const [isZipping, setIsZipping] = useState(false);
 
           const [settings, setSettings] = useState({
+            deviceMode: 'auto', // 'auto', 'phone', 'tablet'
             statusBar: true,
+            holePunch: true, // Only applies to phones
             navBar: 'gesture', 
             timeText: '10:00'
           });
@@ -78,64 +84,82 @@
             }
           };
 
-          const drawStatusBarIcons = (ctx, targetWidth, barHeight, uiColor, timeText) => {
+          const drawStatusBarIcons = (ctx, targetWidth, barHeight, uiColor, timeText, isPhone, showHolePunch) => {
             ctx.fillStyle = uiColor;
             ctx.font = `500 ${Math.floor(barHeight * 0.45)}px 'Roboto', sans-serif`;
             ctx.textBaseline = 'middle';
             ctx.textAlign = 'left';
 
-            const padding = targetWidth * 0.03;
+            // Phones generally have a bit more side padding due to rounded corners
+            const padding = targetWidth * (isPhone ? 0.05 : 0.03);
             const iconY = barHeight * 0.55; 
 
+            // Time on Left
             ctx.fillText(timeText, padding, iconY);
 
+            // Hole-Punch Camera for Phones (Center)
+            if (isPhone && showHolePunch) {
+                ctx.beginPath();
+                // A subtle black circle in the top center
+                const punchRadius = barHeight * 0.25;
+                ctx.arc(targetWidth / 2, barHeight * 0.5, punchRadius, 0, Math.PI * 2);
+                ctx.fillStyle = '#000000'; // Always black, like a real camera lens
+                ctx.fill();
+                ctx.fillStyle = uiColor; // Reset fill back to UI color for the rest
+            }
+
+            // Icons on Right
             ctx.textAlign = 'right';
             const iconSize = barHeight * 0.4;
-            const iconSpacing = iconSize * 0.5;
+            const iconSpacing = iconSize * 0.65; // Increased spacing based on Android Material guidelines
+            const iconHeight = iconSize * 0.85; // Standardized height across all icons
+            const baseline = iconY + iconHeight / 2; // Perfect vertical centering baseline
             let currentX = targetWidth - padding;
 
+            // 1. Battery
             const batWidth = iconSize * 0.45;
-            const batHeight = iconSize * 0.9;
             const nubWidth = batWidth * 0.4;
-            const nubHeight = batHeight * 0.15;
-            const bodyHeight = batHeight - nubHeight;
-            const batY = iconY - batHeight / 2;
+            const nubHeight = iconHeight * 0.15;
+            const bodyHeight = iconHeight - nubHeight;
             
-            ctx.fillRect(currentX - batWidth, batY + nubHeight, batWidth, bodyHeight);
-            ctx.fillRect(currentX - batWidth / 2 - nubWidth / 2, batY, nubWidth, nubHeight);
+            ctx.fillRect(currentX - batWidth, baseline - bodyHeight, batWidth, bodyHeight);
+            ctx.fillRect(currentX - batWidth / 2 - nubWidth / 2, baseline - iconHeight, nubWidth, nubHeight);
             
             currentX -= (batWidth + iconSpacing);
 
-            const cellSize = iconSize * 0.9;
+            // 2. Cellular
             ctx.beginPath();
-            ctx.moveTo(currentX, iconY + iconSize / 2); 
-            ctx.lineTo(currentX, iconY + iconSize / 2 - cellSize); 
-            ctx.lineTo(currentX - cellSize, iconY + iconSize / 2); 
+            ctx.moveTo(currentX, baseline); 
+            ctx.lineTo(currentX, baseline - iconHeight); 
+            ctx.lineTo(currentX - iconHeight, baseline); 
             ctx.closePath();
             ctx.fill();
 
-            currentX -= (cellSize + iconSpacing);
+            // Custom kerning for the diagonal shapes:
+            // We offset the bounding box spacing by the Wi-Fi horizontal spread 
+            // so the visual gap perfectly matches the rectangular gap of the Battery.
+            const wifiWidthHalf = iconHeight * Math.cos(Math.PI / 4); 
+            currentX -= (iconHeight + iconSpacing - wifiWidthHalf);
 
-            const wifiRadius = iconSize * 0.95;
-            const wifiWidthHalf = wifiRadius * Math.cos(Math.PI / 4); 
+            // 3. Wi-Fi
             const wifiX = currentX - wifiWidthHalf;
-            const wifiY = iconY + iconSize / 2; 
 
             ctx.beginPath();
-            ctx.moveTo(wifiX, wifiY);
-            ctx.arc(wifiX, wifiY, wifiRadius, Math.PI * 1.25, Math.PI * 1.75);
-            ctx.lineTo(wifiX, wifiY);
+            ctx.moveTo(wifiX, baseline);
+            ctx.arc(wifiX, baseline, iconHeight, Math.PI * 1.25, Math.PI * 1.75);
+            ctx.lineTo(wifiX, baseline);
             ctx.fill();
           };
 
-          const drawNavBarIcons = (ctx, targetWidth, navHeight, navY, uiColor, navType) => {
+          const drawNavBarIcons = (ctx, targetWidth, navHeight, navY, uiColor, navType, isPhone) => {
             ctx.fillStyle = uiColor;
             ctx.strokeStyle = uiColor;
             ctx.lineWidth = Math.max(3, navHeight * 0.05);
 
             if (navType === 'gesture') {
-              const pillWidth = targetWidth * 0.35;
-              const pillHeight = navHeight * 0.12;
+              // Phone pills are generally wider and thinner relative to screen width
+              const pillWidth = targetWidth * (isPhone ? 0.4 : 0.35);
+              const pillHeight = navHeight * (isPhone ? 0.1 : 0.12);
               const pillX = (targetWidth - pillWidth) / 2;
               const pillY = navY + (navHeight - pillHeight) / 2 + (navHeight * 0.1);
 
@@ -147,7 +171,7 @@
               }
               ctx.fill();
             } else if (navType === 'buttons') {
-              const spacing = targetWidth * 0.25;
+              const spacing = targetWidth * (isPhone ? 0.22 : 0.25);
               const centerY = navY + navHeight / 2;
               const centerX = targetWidth / 2;
               const iconSize = navHeight * 0.35;
@@ -185,18 +209,36 @@
               const originalWidth = source.width;
               const originalHeight = source.height;
 
-              const trimTop = 50;
-              const trimBottom = 40;
+              // --- Device Detection Logic ---
+              // If auto, phone screens are typically taller than 1.7 ratio (like 19.5:9), 
+              // while tablets are closer to 1.33 or 1.4 (like 4:3 or 3:2).
+              const isPhoneRatio = (originalHeight / originalWidth) > 1.6;
+              const isPhone = settings.deviceMode === 'auto' ? isPhoneRatio : settings.deviceMode === 'phone';
+
+              // --- Dynamic Trimming ---
+              // Phone: Trim larger top (130px) for Dynamic Island/Notch. Trim 45px bottom.
+              // Tablet: Trim standard iOS top (50px). Trim 40px bottom.
+              const trimTop = isPhone ? 130 : 50;
+              const trimBottom = isPhone ? 45 : 40;
               const trimmedHeight = Math.max(1, originalHeight - trimTop - trimBottom);
 
               const isPortrait = originalHeight > originalWidth;
-              const barHeight = settings.statusBar ? Math.max(originalWidth * (isPortrait ? 0.035 : 0.025), 40) : 0;
-              const navHeight = settings.navBar !== 'none' ? Math.max(originalWidth * (isPortrait ? 0.045 : 0.035), 60) : 0;
+              
+              // --- Dynamic UI Bar Heights ---
+              // Phone status bars take up slightly more vertical percentage
+              const barHeight = settings.statusBar 
+                ? Math.max(originalWidth * (isPhone ? 0.075 : (isPortrait ? 0.035 : 0.025)), isPhone ? 60 : 40) 
+                : 0;
+              
+              const navHeight = settings.navBar !== 'none' 
+                ? Math.max(originalWidth * (isPhone ? 0.065 : (isPortrait ? 0.045 : 0.035)), isPhone ? 60 : 60) 
+                : 0;
 
               const finalHeight = barHeight + trimmedHeight + navHeight;
               canvas.width = originalWidth;
               canvas.height = finalHeight;
 
+              // Draw trimmed source image in center
               const imgY = barHeight;
               ctx.drawImage(
                 source.img, 
@@ -204,33 +246,37 @@
                 0, imgY, originalWidth, trimmedHeight     
               );
 
+              // Sample Edge Colors for Auto-Contrast
               const topColor = getAverageColor(ctx, 0, imgY, originalWidth, Math.min(10, trimmedHeight));
               const bottomColor = getAverageColor(ctx, 0, imgY + trimmedHeight - Math.min(10, trimmedHeight), originalWidth, Math.min(10, trimmedHeight));
 
+              // Draw Android Status Bar
               if (settings.statusBar) {
                 const isLight = topColor.lum > 0.5;
                 ctx.fillStyle = isLight ? '#FFFFFF' : '#000000';
                 ctx.fillRect(0, 0, originalWidth, barHeight);
 
                 const uiColor = isLight ? '#1F1F1F' : '#FFFFFF';
-                drawStatusBarIcons(ctx, originalWidth, barHeight, uiColor, settings.timeText);
+                drawStatusBarIcons(ctx, originalWidth, barHeight, uiColor, settings.timeText, isPhone, settings.holePunch);
               }
 
+              // Draw Android Nav Bar
               if (settings.navBar !== 'none') {
                 const navY = finalHeight - navHeight;
-                
                 const isLight = bottomColor.lum > 0.5;
+                
                 ctx.fillStyle = isLight ? '#FFFFFF' : '#000000';
                 ctx.fillRect(0, navY, originalWidth, navHeight);
 
                 const uiColor = isLight ? '#1F1F1F' : '#FFFFFF';
-                drawNavBarIcons(ctx, originalWidth, navHeight, navY, uiColor, settings.navBar);
+                drawNavBarIcons(ctx, originalWidth, navHeight, navY, uiColor, settings.navBar, isPhone);
               }
 
               results.push({
                 id: source.id,
                 name: source.name,
-                dataUrl: canvas.toDataURL('image/jpeg', 0.95)
+                dataUrl: canvas.toDataURL('image/jpeg', 0.95),
+                detectedType: isPhone ? 'Phone' : 'Tablet'
               });
             }
 
@@ -296,26 +342,55 @@
             if (fileInputRef.current) fileInputRef.current.value = '';
           };
 
+          // Updated JPEG force-download script
           const downloadImage = (dataUrl, filename) => {
-  const link = document.createElement('a');
-  
-  // This removes the old extension (.png) and replaces it with .jpg
-  const safeFilename = filename.replace(/\.[^/.]+$/, "") + ".jpg";
-  
-  link.download = `android-${safeFilename}`;
-  link.href = dataUrl;
-  link.click();
-};
+            const link = document.createElement('a');
+            const safeFilename = filename.replace(/\.[^/.]+$/, "") + ".jpg";
+            link.download = `android-${safeFilename}`;
+            link.href = dataUrl;
+            link.click();
+          };
+
+          // New batch download script using JSZip
+          const downloadAll = async () => {
+            if (processedImages.length === 0 || typeof JSZip === 'undefined') return;
+            setIsZipping(true);
+            try {
+              const zip = new JSZip();
+              
+              // Add all processed images to the zip archive
+              processedImages.forEach((img) => {
+                const base64Data = img.dataUrl.split(',')[1];
+                const safeFilename = img.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                zip.file(`android-${safeFilename}`, base64Data, {base64: true});
+              });
+              
+              // Generate the zip and trigger download
+              const content = await zip.generateAsync({type: "blob"});
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(content);
+              link.download = "android-mockups.zip";
+              link.click();
+              
+              // Cleanup
+              setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+            } catch (error) {
+              console.error("Error creating zip file", error);
+              alert("Failed to create ZIP file. You can still download them individually.");
+            } finally {
+              setIsZipping(false);
+            }
+          };
 
           return (
             <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
               <div className="max-w-[1400px] mx-auto">
                 <header className="mb-8">
                   <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                    <Tablet className="text-emerald-500 w-8 h-8" />
-                    Androidifier (Batch Processor)
+                    <Smartphone className="text-emerald-500 w-8 h-8" />
+                    Androidifier Mockup Tool
                   </h1>
-                  <p className="text-slate-500 mt-1">Upload multiple iPad screenshots to seamlessly convert them into Android tablet mockups.</p>
+                  <p className="text-slate-500 mt-1">Upload multiple iPhone or iPad screenshots to seamlessly convert them into Android mockups.</p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -335,11 +410,33 @@
                       </div>
 
                       <div className="space-y-4">
-                        <p className="text-sm text-slate-500">
-                          These settings apply automatically to all images. iOS artifacts (top 50px, bottom 40px) are automatically trimmed and replaced seamlessly. Width is always preserved.
-                        </p>
-
+                        
+                        {/* Device Mode Toggle */}
                         <div className="space-y-3 pt-2">
+                          <label className="text-sm font-semibold text-slate-700">Device Mode</label>
+                          <div className="flex bg-slate-100 p-1 rounded-lg">
+                            {['auto', 'phone', 'tablet'].map((mode) => (
+                                <button
+                                  key={mode}
+                                  onClick={() => updateSetting('deviceMode', mode)}
+                                  className={`flex-1 py-1.5 text-sm font-medium rounded-md capitalize transition-colors ${
+                                    settings.deviceMode === mode 
+                                    ? 'bg-white shadow-sm text-emerald-700' 
+                                    : 'text-slate-500 hover:text-slate-700'
+                                  }`}
+                                >
+                                  {mode}
+                                </button>
+                            ))}
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Auto detects based on image shape. Phones get a larger top crop to remove the Dynamic Island/Notch.
+                          </p>
+                        </div>
+
+                        <hr className="border-slate-100" />
+
+                        <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">Android Status Bar</label>
                             <input 
@@ -350,14 +447,25 @@
                             />
                           </div>
                           {settings.statusBar && (
-                            <div className="flex items-center gap-2 pl-2">
-                              <span className="text-sm text-slate-600">Clock Time:</span>
-                              <input 
-                                type="text" 
-                                value={settings.timeText}
-                                onChange={(e) => updateSetting('timeText', e.target.value)}
-                                className="border border-slate-300 rounded px-2 py-1 text-sm w-24 focus:outline-none focus:border-emerald-500 bg-slate-50"
-                              />
+                            <div className="space-y-3 pl-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-slate-600">Clock Time:</span>
+                                  <input 
+                                    type="text" 
+                                    value={settings.timeText}
+                                    onChange={(e) => updateSetting('timeText', e.target.value)}
+                                    className="border border-slate-300 rounded px-2 py-1 text-sm w-24 focus:outline-none focus:border-emerald-500 bg-slate-50"
+                                  />
+                                </div>
+                                <label className="flex items-center gap-2 text-sm text-slate-600">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={settings.holePunch} 
+                                      onChange={(e) => updateSetting('holePunch', e.target.checked)}
+                                      className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                                    />
+                                    Show camera hole-punch (Phones only)
+                                </label>
                             </div>
                           )}
                         </div>
@@ -379,15 +487,6 @@
                       </div>
                     </div>
 
-                    <div className="bg-emerald-50 rounded-xl p-5 border border-emerald-100 text-sm text-emerald-800 space-y-2">
-                      <p className="font-semibold">How it works:</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Upload one or multiple images.</li>
-                        <li>The tool keeps the exact original width.</li>
-                        <li>It samples the edge pixels to paint a seamless, auto-matching background behind the new Android UI.</li>
-                        <li>Icon colors dynamically switch to light/dark for maximum contrast.</li>
-                      </ul>
-                    </div>
                   </div>
 
                   <div className="lg:col-span-8 flex flex-col gap-6">
@@ -412,7 +511,7 @@
                         </div>
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Drag & Drop Screenshots</h3>
                         <p className="text-slate-500 max-w-sm">
-                          Upload multiple iPad screenshots at once. They will be processed automatically in your browser.
+                          Upload multiple iPhone or iPad screenshots. They will be processed automatically in your browser.
                         </p>
                       </div>
                     )}
@@ -437,6 +536,28 @@
                           </div>
                         )}
 
+                        {processedImages.length > 0 && !isProcessing && (
+                          <div className="flex items-center justify-between mt-4 mb-2 px-2">
+                            <h3 className="font-semibold text-slate-700">Processed Mockups ({processedImages.length})</h3>
+                            {processedImages.length > 1 && (
+                                <button
+                                  onClick={downloadAll}
+                                  disabled={isZipping}
+                                  className={`bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${isZipping ? 'opacity-70 cursor-wait' : ''}`}
+                                >
+                                  {isZipping ? (
+                                      <span className="animate-pulse">Zipping...</span>
+                                  ) : (
+                                      <>
+                                        <Archive className="w-4 h-4" />
+                                        Download All (ZIP)
+                                      </>
+                                  )}
+                                </button>
+                            )}
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
                           {processedImages.map((img) => (
                             <div key={img.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
@@ -446,6 +567,9 @@
                                   alt={img.name} 
                                   className="max-h-[500px] w-auto object-contain drop-shadow-md rounded-sm"
                                 />
+                                <div className="absolute top-2 right-2 bg-slate-900/70 text-white text-xs font-medium px-2 py-1 rounded">
+                                    {img.detectedType} Mode
+                                </div>
                               </div>
                               
                               <div className="p-4 flex items-center justify-between bg-white">
